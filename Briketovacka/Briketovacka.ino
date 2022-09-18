@@ -21,7 +21,7 @@ DS18B20 oilTemp(oneWirePin);
 DateTime myDateTime;
 RTC_DS1307 rtc;
 LiquidCrystal_I2C lcd(0x27, 20, 4);
-bool oilTempOK = 0;
+bool oilTempSenOK = 0;
 
 
 void printTime(uint8_t row) {
@@ -30,7 +30,6 @@ void printTime(uint8_t row) {
 	lcd.print(myDateTime.hour());
 	lcd.print(":");
 	lcd.print(myDateTime.minute());
-
 }
 
 // the setup function runs once when you press reset or power the board
@@ -55,7 +54,7 @@ void setup() {
 	}
 		
 	if (dsCount == 1) {
-		oilTempOK = 1;
+		oilTempSenOK = 1;
 		Serial.println("Oil temp sen found");
 		lcd.print("Oil temp sen found");
 		lcd.setCursor(0, 2);
