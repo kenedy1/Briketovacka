@@ -154,8 +154,10 @@ void setup() {
 	lcd.clear();
 	printTime(0);
 	Serial.println("Init finished OK");
+
 	oilTemtAction.enable();
 	readInputsAction.enable();
+
 	myCommands.SetDefaultHandler(cmd_unrecognized);
 	myCommands.AddCommand(&scmd_set_hour);
 	myCommands.AddCommand(&scmd_set_minuts);
@@ -185,20 +187,19 @@ void loop() {
 
 	while (1) {
 		myCommands.ReadSerial();
+
 		readInputsAction.check();
 		oilTemtAction.check();
+
 		printState(Brik_State, Silo_Stae);
 		//Briketovacka state machine
 		//Serial.print("States> ");
 		//Serial.print(Brik_State);
 		//Serial.println(Silo_Stae);
-		switch (Brik_State)
-		{
+		switch (Brik_State){
 		case OFF:
 			Silo_Stae = SI_OFF;
 			do_all_off();
-		
-
 			if (iBriketOn.pressedFor(500)) {
 				ON_presed = 1;
 				break;
@@ -220,10 +221,25 @@ void loop() {
 				break;
 			}
 
-			if (iBriketMin.pressedFor(10000)) {
+			if (iOlejLow.pressedFor(10000)) {
+				Brik_State = ALL_MALOLEJ;
+			}
+
+			if (iBriketMin.pressedFor(10000) && iSiloMin.pressedFor(10000) ){
 				Brik_State = ALL_MALO_PILIN;
 				break;
 			}
+
+			if (iTlakFiltra.pressedFor(10000)) {
+				Brik_State = ALL_FILTER;
+				break;
+			}
+
+			if (brik_oil_temp > TEMP_OIL_BRIK_MAX){
+				Brik_State = ALL_TEPL_OLEJ;
+				break;
+			
+			
 			
 		case ONGO:
 
@@ -246,7 +262,7 @@ void loop() {
 			break;
 		case SI_ON:
 			digitalWrite(doPrefukON, 0);
-
+			if (iBriketMin.pressedFor(10000)) Silo_Stae = PREFUK;
 			break;
 
 		case PREFUK:
@@ -255,6 +271,7 @@ void loop() {
 			if (iBriketMin.pressedFor(10000) && iSiloMin.pressedFor(10000)) Silo_Stae = ALL_SMALO_PILIN;
 			if (iBriketMax.pressedFor(2000) && iSiloMax.pressedFor(2000)) Silo_Stae = ALL_SVELA_PILIN;
 			break;
+
 		case ALL_SMALO_PILIN:
 			digitalWrite(doPrefukON, 0);
 			digitalWrite(doAlarm, 1);
@@ -263,6 +280,7 @@ void loop() {
 				Silo_Stae = SI_ON;
 			}
 			break;
+
 		case ALL_SVELA_PILIN:
 			digitalWrite(doPrefukON, 0);
 			digitalWrite(doAlarm, 1);

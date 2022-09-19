@@ -6,10 +6,10 @@
 #include <StopwatchLib.h>
 #include <DebounceFilterLib.h>
 
-#define   TEMP_CHLAD_ON  48
-#define   TEMP_CHLAD_OFF 40
+#define   TEMP_CHLAD_ON      48
+#define   TEMP_CHLAD_OFF     40
 #define   TEMP_OIL_LOW       20
-#define   TEMP_BRIK_MAX 60
+#define   TEMP_OIL_BRIK_MAX  60
 // digitalne vstupy
 #define   diTlakFilter	22
 #define   diSiloMax		23
