@@ -1,3 +1,4 @@
+
 /*
  Name:		Briketovacka.ino
  Created:	9/18/2022 5:48:11 PM
@@ -16,26 +17,11 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include "Commands.h"
-#include <Globals.h>
+#include "Globals.h"
 #include <RTClib.h>
 #include "IO_Pins.h"
-char ser_comm_buf[32];
-SerialCommands myCommands(&Serial, ser_comm_buf, sizeof(ser_comm_buf), "\r\n", " ");
 
-void printState(T_BrikState _state, T_SiloState _sil_state) {
-	if (lastBrikState != _state) {
-		Serial.println(state_text[int8_t(_state)]);
-		lcd.setCursor(0, 1);
-		lcd.print(state_text[int8_t(_state)]);
-	}
-	lastBrikState = _state;
-	if (lastSilState != _sil_state) {
-		Serial.println(Sil_state_text[int8_t(_sil_state)]);
-		lcd.setCursor(0, 2);
 
-	}
-	lastSilState = _sil_state;
-}
 //Diplay actual time from RTC on LCD
 void printTime(uint8_t row) {
 	myDateTime = rtc.now();
@@ -60,6 +46,23 @@ void printTime(uint8_t row) {
 		lcd.print("Err no RTC");
 		Serial.println(F("ERROR NO RTC found"));
 	}
+}
+
+
+//print state
+void printState(T_BrikState _state, T_SiloState _sil_state) {
+	if (lastBrikState != _state) {
+		Serial.println(state_text[int8_t(_state)]);
+		lcd.setCursor(0, 1);
+		lcd.print(state_text[int8_t(_state)]);
+	}
+	lastBrikState = _state;
+	if (lastSilState != _sil_state) {
+		Serial.println(Sil_state_text[int8_t(_sil_state)]);
+		lcd.setCursor(0, 2);
+
+	}
+	lastSilState = _sil_state;
 }
 
 void printDigits(int digits) {
@@ -89,16 +92,6 @@ void getOilTemp() {
 
 TimedAction oilTemtAction = TimedAction(1000, getOilTemp);
 TimedAction readInputsAction = TimedAction(50, read_all_inputs);
-char ser_comm_buf[32];
-SerialCommands myCommands(&Serial, ser_comm_buf, sizeof(ser_comm_buf), "\r\n", " ");
-SerialCommand  scmd_set_hour("H", cmd_set_hour, false);
-SerialCommand  scmd_set_minuts("M", cmd_set_minuts, false);
-SerialCommand  scmd_set_year("Y", cmd_set_year, false);
-SerialCommand  scmd_set_mount("T", cmd_set_mount, false);
-SerialCommand  scmd_set_day("A", cmd_set_day, false);
-SerialCommand  scmd_set_whour("W", cmd_set_whour, false);
-SerialCommand  scmd_info("I", cmd_print_info, true);
-SerialCommand  scmd_help("h", cmd_help, true);
 // the setup function runs once when you press reset or power the board
 void setup() {
 	Serial.begin(115200);
@@ -179,79 +172,198 @@ void checkChladenie() {
 }
 
 // the loop function runs over and over again until power down or reset
-void loop() {
+void loop()
+{
 	myCommands.ReadSerial();
-	static T_BrikState Brik_State = OFF;
+	static T_BrikState Brik_State = BROFF;
 	static T_SiloState Silo_Stae = SI_OFF;
 	bool ON_presed = 0;
-
-	while (1) {
+	while (1)
+	{
 		myCommands.ReadSerial();
 
 		readInputsAction.check();
 		oilTemtAction.check();
-
+		myCommands.ReadSerial();
 		printState(Brik_State, Silo_Stae);
 		//Briketovacka state machine
 		//Serial.print("States> ");
 		//Serial.print(Brik_State);
 		//Serial.println(Silo_Stae);
-		switch (Brik_State){
-		case OFF:
+		switch (Brik_State)
+		{
+		case BROFF:
 			Silo_Stae = SI_OFF;
 			do_all_off();
-			if (iBriketOn.pressedFor(500)) {
+			if (iBriketOn.releasedFor(1000)) {
 				ON_presed = 1;
 				break;
-
 			}
-			if (ON_presed && iBriketOn.wasReleased()) {
+			if (ON_presed && iBriketOn.pressedFor(200)) {
 				ON_presed = 0;
-				Brik_State = ON;
+				Brik_State = BRON;
 				Silo_Stae = SI_ON;
-
 			}
 			break;
 
-		case ON:
+		case BRON:
 			checkChladenie();
-			if (iBriketOn.pressedFor(100))
+			if (iBriketOn.releasedFor(1000)) ON_presed = 1;
+
+			if (iBriketOn.pressedFor(200) && ON_presed)
 			{
-				Brik_State = OFF;
+				ON_presed = 0;
+				Brik_State = BROFF;
 				break;
 			}
 
-			if (iOlejLow.pressedFor(10000)) {
+			if (iOlejLow.pressedFor(10000)) 
+			{
 				Brik_State = ALL_MALOLEJ;
 			}
 
-			if (iBriketMin.pressedFor(10000) && iSiloMin.pressedFor(10000) ){
+			if (iBriketMin.pressedFor(20000) && iSiloMin.pressedFor(20000)) 
+			{
 				Brik_State = ALL_MALO_PILIN;
 				break;
 			}
 
-			if (iTlakFiltra.pressedFor(10000)) {
+			if (iTlakFiltra.pressedFor(10000))
+			{
 				Brik_State = ALL_FILTER;
 				break;
 			}
 
-			if (brik_oil_temp > TEMP_OIL_BRIK_MAX){
+			if (brik_oil_temp > TEMP_OIL_BRIK_MAX)
+			{
+				Brik_State = ALL_TEPL_OLEJ;
+			}
+			digitalWrite(doAlarm, 0);
+			Brik_State = BRONGO;
+			break;
+
+
+
+
+		case BRONGO:
+			checkChladenie();
+			if (iBriketOn.releasedFor(1000)) ON_presed = 1;
+
+			if (iBriketOn.pressedFor(200) && ON_presed)
+			{
+				ON_presed = 0;
+				Brik_State = BROFF;
+				break;
+			}
+
+			if (iOlejLow.pressedFor(10000))
+			{
+				Brik_State = ALL_MALOLEJ;
+			}
+
+			if (iBriketMin.pressedFor(20000) && iSiloMin.pressedFor(20000))
+			{
+				Brik_State = ALL_MALO_PILIN;
+				break;
+			}
+
+
+			if (iTlakFiltra.pressedFor(10000))
+			{
+				Brik_State = ALL_FILTER;
+				break;
+			}
+
+			if (brik_oil_temp > TEMP_OIL_BRIK_MAX)
+			{
 				Brik_State = ALL_TEPL_OLEJ;
 				break;
-			
-			
-			
-		case ONGO:
-
+			}
+			digitalWrite(doBriketON, 1);
+			digitalWrite(doAlarm, 0);
 			break;
 
 		case ALL_TEPL_OLEJ:
+			if (iBriketOn.releasedFor(1000)) ON_presed = 1;
+
+			if (iBriketOn.pressedFor(5000) && ON_presed)
+			{
+				ON_presed = 0;
+				Brik_State = BROFF;
+				break;
+			}
 			checkChladenie();
 			digitalWrite(doAlarm, 1);
 			digitalWrite(doBriketON, 0);
-			if (brik_oil_temp < TEMP_CHLAD_ON) Brik_State = ONGO;
-			if (iBriketMin.pressedFor(10000) && iSiloMin.pressedFor(10000)) Silo_Stae = ALL_SMALO_PILIN;
-			if (iBriketMax.pressedFor(2000) && iSiloMax.pressedFor(2000)) Silo_Stae = ALL_SVELA_PILIN;
+			if (brik_oil_temp < TEMP_CHLAD_ON) Brik_State = BRONGO;
+
+			break;
+		case ALL_MALO_PILIN:
+			checkChladenie();
+			digitalWrite(doAlarm, 1);
+			digitalWrite(doBriketON, 0);
+			if (iBriketOn.releasedFor(1000)) ON_presed = 1;
+
+			if (iBriketOn.pressedFor(5000) && ON_presed)
+			{
+				ON_presed = 0;
+				Brik_State = BROFF;
+				break;
+			}
+
+			if (iBriketMin.releasedFor(20000)) Brik_State = BRONGO;
+
+			break;
+		case ALL_VRECO_PLNE:
+			checkChladenie();
+			digitalWrite(doAlarm, 1);
+			digitalWrite(doBriketON, 0);
+			if (iBriketOn.releasedFor(1000)) ON_presed = 1;
+
+			if (iBriketOn.pressedFor(5000) && ON_presed)
+			{
+				ON_presed = 0;
+				Brik_State = BROFF;
+				break;
+			}
+
+			if (ON_presed && iBriketOn.pressedFor(100) && ON_presed && iPlneVreco.releasedFor(1000))
+			{
+				digitalWrite(doAlarm, 0);
+				ON_presed = 0;
+				Brik_State = BRONGO;
+				break;
+			}
+
+			break;
+
+		case ALL_FILTER:
+
+			if (iBriketOn.releasedFor(1000)) ON_presed = 1;
+
+			if (iBriketOn.pressedFor(5000) && ON_presed)
+			{
+				ON_presed = 0;
+				Brik_State = BROFF;
+				break;
+			}
+
+			digitalWrite(doAlarm, 1);
+			digitalWrite(doBriketON, 0);
+			break;
+
+		case ALL_MALOLEJ:
+			if (iBriketOn.releasedFor(1000)) ON_presed = 1;
+
+			if (iBriketOn.pressedFor(5000) && ON_presed)
+			{
+				ON_presed = 0;
+				Brik_State = BROFF;
+				break;
+			}
+
+			digitalWrite(doAlarm, 1);
+			digitalWrite(doBriketON, 0);
 			break;
 		}
 
@@ -262,7 +374,8 @@ void loop() {
 			break;
 		case SI_ON:
 			digitalWrite(doPrefukON, 0);
-			if (iBriketMin.pressedFor(10000)) Silo_Stae = PREFUK;
+			if (iBriketMin.pressedFor(10000) && iSiloMin.releasedFor(10000)) Silo_Stae = PREFUK;
+			if (iBriketMax.pressedFor(2000) && iSiloMax.pressedFor(2000)) Silo_Stae = ALL_SVELA_PILIN;
 			break;
 
 		case PREFUK:
@@ -293,10 +406,7 @@ void loop() {
 		default:
 			break;
 
-			}
-
 		}
 
 	}
-
 }

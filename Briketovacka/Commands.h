@@ -1,7 +1,11 @@
 #ifndef _Commands_h_
 #define _Commands_h_
+
 #include "Globals.h"
-#include <RTClib.h>
+char ser_comm_buf[32];
+SerialCommands myCommands(&Serial, ser_comm_buf, sizeof(ser_comm_buf), "\r\n", " ");
+
+
 
 void cmd_unrecognized(SerialCommands* sender, const char* cmd)
 {
@@ -58,6 +62,7 @@ void cmd_set_hour(SerialCommands* sender)
 	rtc.adjust(DateTime(_t_now.year(), _t_now.month(), _t_now.day(), hour, _t_now.minute(), 0));
 	printActTime(sender);
 }
+
 void cmd_set_minuts(SerialCommands* sender)
 {
 	char* _minut_str = sender->Next();
@@ -75,6 +80,7 @@ void cmd_set_minuts(SerialCommands* sender)
 	rtc.adjust(DateTime(_t_now.year(), _t_now.month(), _t_now.day(), _t_now.hour(), minut, 0));
 	printActTime(sender);
 }
+
 void cmd_set_year(SerialCommands* sender)
 {
 	char* _year_str = sender->Next();
@@ -93,6 +99,7 @@ void cmd_set_year(SerialCommands* sender)
 	_t_now = rtc.now();
 	printActTime(sender);
 }
+
 void cmd_set_mount(SerialCommands* sender)
 {
 	char* _mount_str = sender->Next();
@@ -111,6 +118,7 @@ void cmd_set_mount(SerialCommands* sender)
 	_t_now = rtc.now();
 	printActTime(sender);
 }
+
 void cmd_set_day(SerialCommands* sender)
 {
 	char* _day_str = sender->Next();
@@ -148,6 +156,7 @@ void cmd_set_whour(SerialCommands* sender)
 	sender->GetSerial()->println(_whour);
 
 }
+
 void cmd_print_info(SerialCommands* sender)
 {
 	printActTime(sender);
@@ -156,6 +165,14 @@ void cmd_print_info(SerialCommands* sender)
 
 }
 
+SerialCommand  scmd_set_hour("H", cmd_set_hour, false);
+SerialCommand  scmd_set_minuts("M", cmd_set_minuts, false);
+SerialCommand  scmd_set_year("Y", cmd_set_year, false);
+SerialCommand  scmd_set_mount("T", cmd_set_mount, false);
+SerialCommand  scmd_set_day("A", cmd_set_day, false);
+SerialCommand  scmd_set_whour("W", cmd_set_whour, false);
+SerialCommand  scmd_info("I", cmd_print_info, true);
+SerialCommand  scmd_help("h", cmd_help, true);
 
 
 #endif // !_Commands_h_

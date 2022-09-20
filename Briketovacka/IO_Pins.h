@@ -1,7 +1,6 @@
 #ifndef _IO_Pins_h_
 #define _IO_Pins_h_
- 
- 
+
 #include <JC_Button.h>
 #include <StopwatchLib.h>
 #include <DebounceFilterLib.h>
@@ -30,9 +29,18 @@
 // one wire
 #define   oneWirePin    40
 
+Button iTlakFiltra(diTlakFilter, 10000, false, false);
+Button iSiloMax(diSiloMax, 10000, false, false);
+Button iSiloMin(diSiloMin, 10000, false, false);
+Button iBriketMax(diBriketMax, 10000, false, false);
+Button iBriketMin(diBriketMin, 10000, false, false);
+Button iOlejLow(diOlejLow, 10000, false, false);
+Button iBriketOn(diBriketON, 500, false, true);
+Button iPlneVreco(diPlneVreco, 5000, false, true);
+
 void setupIOpins() {
 	//set inputs pins
-	
+
 	pinMode(diTlakFilter, INPUT);
 	pinMode(diSiloMax, INPUT);
 	pinMode(diSiloMin, INPUT);
@@ -41,14 +49,14 @@ void setupIOpins() {
 	pinMode(diOlejLow, INPUT);
 	pinMode(diBriketON, INPUT);
 	pinMode(diPlneVreco, INPUT);
-	 iTlakFiltra.begin();
-	 iSiloMax.begin();
-	 iSiloMin.begin();
-	 iBriketMax.begin();
-	 iBriketMin.begin();
-	 iOlejLow.begin();
-	 iBriketOn.begin();
-	 iPlneVreco.begin();
+	iTlakFiltra.begin();
+	iSiloMax.begin();
+	iSiloMin.begin();
+	iBriketMax.begin();
+	iBriketMin.begin();
+	iOlejLow.begin();
+	iBriketOn.begin();
+	iPlneVreco.begin();
 
 	//set output pins
 	pinMode(doPrefukON, OUTPUT);
@@ -58,23 +66,23 @@ void setupIOpins() {
 	pinMode(doAlarm, OUTPUT);
 
 }
- void read_all_inputs() {
-	 iTlakFiltra.read();
-	 iSiloMax.read();
-	 iSiloMin.read();
-	 iBriketMax.read();
-	 iBriketMin.read();
-	 iOlejLow.read();
-	 iBriketOn.read();
-	 iPlneVreco.read();
-	
+void read_all_inputs() {
+	iTlakFiltra.read();
+	iSiloMax.read();
+	iSiloMin.read();
+	iBriketMax.read();
+	iBriketMin.read();
+	iOlejLow.read();
+	iBriketOn.read();
+	iPlneVreco.read();
+
 }
- void do_all_off() {
-	 digitalWrite(doBriketON, 0);
-	 digitalWrite(doChladenie, 0);
-	 digitalWrite(doOdlahSTART, 0);
-	 digitalWrite(doPrefukON, 0);
-	 digitalWrite(doAlarm, 0);
- }
+void do_all_off() {
+	digitalWrite(doBriketON, 0);
+	digitalWrite(doChladenie, 0);
+	digitalWrite(doOdlahSTART, 0);
+	digitalWrite(doPrefukON, 0);
+	digitalWrite(doAlarm, 0);
+}
 
 #endif

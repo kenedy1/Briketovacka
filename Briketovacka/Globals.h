@@ -3,23 +3,20 @@
 
 
 
-#include <JC_Button.h>
 #include <StopwatchLib.h>
-#include <DebounceFilterLib.h>
 #include <OneWire.h>
-#include <SerialCommands.h>
-#include <TimedAction.h>
 #include <DS18B20.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <RTClib.h>
 #include "IO_Pins.h"
+#include <SerialCommands.h>
 
 
 typedef enum {
-	OFF,
-	ON,
-	ONGO,
+	BROFF,
+	BRON,
+	BRONGO,
 	ALL_TEPL_OLEJ,
 	ALL_MALO_PILIN,
 	ALL_VRECO_PLNE,
@@ -63,15 +60,6 @@ DS18B20 oilTemp(oneWirePin);
 DateTime myDateTime;
 RTC_DS1307 rtc;
 LiquidCrystal_I2C lcd(0x27, 20, 4);
-
-Button iTlakFiltra(diTlakFilter, 10000, false, false);
-Button iSiloMax(diSiloMax, 10000, false, false);
-Button iSiloMin(diSiloMin, 10000, false, false);
-Button iBriketMax(diBriketMax, 10000, false, false);
-Button iBriketMin(diBriketMin, 10000, false, false);
-Button iOlejLow(diOlejLow, 10000, false, false);
-Button iBriketOn(diBriketON, 100, false, true);
-Button iPlneVreco(diPlneVreco, 5000, false, true);
 
 
 bool oilTempSenOK = 0;
