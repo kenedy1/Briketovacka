@@ -1,5 +1,6 @@
 # Briketovacka
 Plc control for sawdust  bricked press.
+
 Install Visual studio 2022 community. + c++ dev env.
 https://c2rsetup.officeapps.live.com/c2r/downloadVS.aspx?sku=community&channel=Release&version=VS2022&source=VSLandingPage&includeRecommended=true&cid=2030:7069b90770534a59b8f6c8944cc14caf
 
