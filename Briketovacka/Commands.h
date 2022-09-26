@@ -174,6 +174,5 @@ SerialCommand  scmd_set_whour("W", cmd_set_whour, false);
 SerialCommand  scmd_info("I", cmd_print_info, true);
 SerialCommand  scmd_help("h", cmd_help, true);
 
-
 #endif // !_Commands_h_
 

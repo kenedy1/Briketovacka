@@ -2,7 +2,7 @@
 /*
  Name:		Briketovacka.ino
  Created:	9/18/2022 5:48:11 PM
- Author:	Majo
+ Author:	Marian Murín
 */
 
 
@@ -21,7 +21,7 @@
 #include <RTClib.h>
 #include "IO_Pins.h"
 
-
+//--------------------------------------
 //Diplay actual time from RTC on LCD
 void printTime(uint8_t row) {
 	myDateTime = rtc.now();
@@ -29,7 +29,7 @@ void printTime(uint8_t row) {
 	lcd.print(myDateTime.hour());
 	lcd.print(":");
 	lcd.print(myDateTime.minute());
-	if (rtc.isrunning()) {
+	if (rtc.isrunning()) { //RTC is OK
 		myDateTime = rtc.now();
 		lcd.setCursor(0, row);
 		lcd.print(myDateTime.hour(), DEC);
@@ -41,15 +41,15 @@ void printTime(uint8_t row) {
 		printDigits(myDateTime.minute());
 		Serial.println(" ");
 	}
-	else {
+	else {   //No RTC
 		lcd.setCursor(0, row);
 		lcd.print("Err no RTC");
 		Serial.println(F("ERROR NO RTC found"));
 	}
 }
 
-
-//print state
+//--------------------------------------
+//print state of state machine
 void printState(T_BrikState _state, T_SiloState _sil_state) {
 	if (lastBrikState != _state) {
 		Serial.println(state_text[int8_t(_state)]);
@@ -64,7 +64,8 @@ void printState(T_BrikState _state, T_SiloState _sil_state) {
 	}
 	lastSilState = _sil_state;
 }
-
+//--------------------------------------
+//Print leading 0 in time
 void printDigits(int digits) {
 	// utility function for digital clock display: prints preceding colon and leading 0
 	Serial.print(":");
@@ -72,7 +73,8 @@ void printDigits(int digits) {
 		Serial.print('0');
 	Serial.print(digits);
 }
-
+//--------------------------------------
+// Get oil temp from onewire 
 void getOilTemp() {
 	if (oilTemp.getNumberOfDevices() == 1) {
 		oilTemp.doConversion();
@@ -89,9 +91,11 @@ void getOilTemp() {
 	}
 	printTime(0);
 }
-
+//--------------------------------------
+//Timed actions
 TimedAction oilTemtAction = TimedAction(1000, getOilTemp);
 TimedAction readInputsAction = TimedAction(50, read_all_inputs);
+//--------------------------------------
 // the setup function runs once when you press reset or power the board
 void setup() {
 	Serial.begin(115200);
@@ -161,7 +165,8 @@ void setup() {
 	myCommands.AddCommand(&scmd_info);
 	myCommands.AddCommand(&scmd_help);
 }
-
+//--------------------------------------
+//Check cooling fan and temp.
 void checkChladenie() {
 	if (!digitalRead(doChladenie)) {
 		if (brik_oil_temp > TEMP_CHLAD_ON) digitalWrite(doChladenie, 1);
@@ -170,7 +175,7 @@ void checkChladenie() {
 	if (brik_oil_temp < TEMP_OIL_LOW) digitalWrite(doOdlahSTART, 1);
 	else digitalWrite(doOdlahSTART, 0);
 }
-
+//--------------------------------------
 // the loop function runs over and over again until power down or reset
 void loop()
 {
@@ -181,7 +186,6 @@ void loop()
 	while (1)
 	{
 		myCommands.ReadSerial();
-
 		readInputsAction.check();
 		oilTemtAction.check();
 		myCommands.ReadSerial();
@@ -192,7 +196,7 @@ void loop()
 		//Serial.println(Silo_Stae);
 		switch (Brik_State)
 		{
-		case BROFF:
+		case BROFF:  //Briketovacka off
 			Silo_Stae = SI_OFF;
 			do_all_off();
 			if (iBriketOn.releasedFor(1000)) {
@@ -206,7 +210,7 @@ void loop()
 			}
 			break;
 
-		case BRON:
+		case BRON:	//Briketovacka ON
 			checkChladenie();
 			if (iBriketOn.releasedFor(1000)) ON_presed = 1;
 
@@ -242,10 +246,7 @@ void loop()
 			Brik_State = BRONGO;
 			break;
 
-
-
-
-		case BRONGO:
+		case BRONGO: //Briketovacka ON and GO
 			checkChladenie();
 			if (iBriketOn.releasedFor(1000)) ON_presed = 1;
 
@@ -267,7 +268,6 @@ void loop()
 				break;
 			}
 
-
 			if (iTlakFiltra.pressedFor(10000))
 			{
 				Brik_State = ALL_FILTER;
@@ -283,7 +283,7 @@ void loop()
 			digitalWrite(doAlarm, 0);
 			break;
 
-		case ALL_TEPL_OLEJ:
+		case ALL_TEPL_OLEJ:  //err teplota oleja
 			if (iBriketOn.releasedFor(1000)) ON_presed = 1;
 
 			if (iBriketOn.pressedFor(5000) && ON_presed)
@@ -298,7 +298,7 @@ void loop()
 			if (brik_oil_temp < TEMP_CHLAD_ON) Brik_State = BRONGO;
 
 			break;
-		case ALL_MALO_PILIN:
+		case ALL_MALO_PILIN:  //err malo piln
 			checkChladenie();
 			digitalWrite(doAlarm, 1);
 			digitalWrite(doBriketON, 0);
@@ -314,7 +314,7 @@ void loop()
 			if (iBriketMin.releasedFor(20000)) Brik_State = BRONGO;
 
 			break;
-		case ALL_VRECO_PLNE:
+		case ALL_VRECO_PLNE: //err plne vreco
 			checkChladenie();
 			digitalWrite(doAlarm, 1);
 			digitalWrite(doBriketON, 0);
@@ -334,10 +334,9 @@ void loop()
 				Brik_State = BRONGO;
 				break;
 			}
-
 			break;
 
-		case ALL_FILTER:
+		case ALL_FILTER: //err filter oleja
 
 			if (iBriketOn.releasedFor(1000)) ON_presed = 1;
 
@@ -352,7 +351,7 @@ void loop()
 			digitalWrite(doBriketON, 0);
 			break;
 
-		case ALL_MALOLEJ:
+		case ALL_MALOLEJ: //err malo oleja
 			if (iBriketOn.releasedFor(1000)) ON_presed = 1;
 
 			if (iBriketOn.pressedFor(5000) && ON_presed)
@@ -364,28 +363,30 @@ void loop()
 
 			digitalWrite(doAlarm, 1);
 			digitalWrite(doBriketON, 0);
+			break;
+		default:
 			break;
 		}
-
-		switch (Silo_Stae)
+		//silo state machine
+		switch (Silo_Stae) 
 		{
-		case SI_OFF:
+		case SI_OFF: //silo OFF
 			digitalWrite(doPrefukON, 0);
 			break;
-		case SI_ON:
+		case SI_ON: //silo ON
 			digitalWrite(doPrefukON, 0);
 			if (iBriketMin.pressedFor(10000) && iSiloMin.releasedFor(10000)) Silo_Stae = PREFUK;
 			if (iBriketMax.pressedFor(2000) && iSiloMax.pressedFor(2000)) Silo_Stae = ALL_SVELA_PILIN;
 			break;
 
-		case PREFUK:
+		case PREFUK: //silo prefuk ON
 			digitalWrite(doPrefukON, 1);
 			if (iBriketMax.pressedFor(5000) || iSiloMin.pressedFor(5000))Silo_Stae = SI_ON;
 			if (iBriketMin.pressedFor(10000) && iSiloMin.pressedFor(10000)) Silo_Stae = ALL_SMALO_PILIN;
 			if (iBriketMax.pressedFor(2000) && iSiloMax.pressedFor(2000)) Silo_Stae = ALL_SVELA_PILIN;
 			break;
 
-		case ALL_SMALO_PILIN:
+		case ALL_SMALO_PILIN: //err malo pilin
 			digitalWrite(doPrefukON, 0);
 			digitalWrite(doAlarm, 1);
 			if (iSiloMin.releasedFor(100000)) {
@@ -394,7 +395,7 @@ void loop()
 			}
 			break;
 
-		case ALL_SVELA_PILIN:
+		case ALL_SVELA_PILIN: //err plne silo
 			digitalWrite(doPrefukON, 0);
 			digitalWrite(doAlarm, 1);
 			if (iBriketMin.pressedFor(10000)) {
@@ -407,6 +408,5 @@ void loop()
 			break;
 
 		}
-
 	}
 }

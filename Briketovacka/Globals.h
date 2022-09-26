@@ -48,7 +48,7 @@ char Sil_state_text[][20] = {
 	"Silo PREFUK",
 	"ERR Silo MALO PILIN",
 	"ERR Silo VELA PILIN"
-	//   12345678901234567890
+//   12345678901234567890
 };
 
 DS18B20 oilTemp(oneWirePin);

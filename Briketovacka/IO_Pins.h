@@ -4,7 +4,7 @@
 #include <JC_Button.h>
 #include <StopwatchLib.h>
 #include <DebounceFilterLib.h>
-
+//temperature for allarms an cooling
 #define   TEMP_CHLAD_ON      48
 #define   TEMP_CHLAD_OFF     40
 #define   TEMP_OIL_LOW       20
@@ -26,9 +26,10 @@
 #define   doChladenie	34
 #define   doAlarm		35
 
-// one wire
+// one wire pin
 #define   oneWirePin    40
-
+//setings for imputs
+//					input pin, time debounc,pullup,invert						
 Button iTlakFiltra(diTlakFilter, 10000, false, false);
 Button iSiloMax(diSiloMax, 10000, false, false);
 Button iSiloMin(diSiloMin, 10000, false, false);
@@ -37,10 +38,9 @@ Button iBriketMin(diBriketMin, 10000, false, false);
 Button iOlejLow(diOlejLow, 10000, false, false);
 Button iBriketOn(diBriketON, 500, false, true);
 Button iPlneVreco(diPlneVreco, 5000, false, true);
-
+//setup all inputs
 void setupIOpins() {
 	//set inputs pins
-
 	pinMode(diTlakFilter, INPUT);
 	pinMode(diSiloMax, INPUT);
 	pinMode(diSiloMin, INPUT);
@@ -57,15 +57,14 @@ void setupIOpins() {
 	iOlejLow.begin();
 	iBriketOn.begin();
 	iPlneVreco.begin();
-
 	//set output pins
 	pinMode(doPrefukON, OUTPUT);
 	pinMode(doBriketON, OUTPUT);
 	pinMode(doOdlahSTART, OUTPUT);
 	pinMode(doChladenie, OUTPUT);
 	pinMode(doAlarm, OUTPUT);
-
 }
+// read state of all input
 void read_all_inputs() {
 	iTlakFiltra.read();
 	iSiloMax.read();
@@ -77,6 +76,7 @@ void read_all_inputs() {
 	iPlneVreco.read();
 
 }
+//all outputs to off state
 void do_all_off() {
 	digitalWrite(doBriketON, 0);
 	digitalWrite(doChladenie, 0);
