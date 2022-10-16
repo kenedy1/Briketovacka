@@ -7,7 +7,7 @@
 //temperature for allarms an cooling
 #define   TEMP_CHLAD_ON      48
 #define   TEMP_CHLAD_OFF     40
-#define   TEMP_OIL_LOW       20
+#define   TEMP_OIL_LOW       10
 #define   TEMP_OIL_BRIK_MAX  60
 // digitalne vstupy
 #define   diTlakFilter	22
@@ -30,12 +30,12 @@
 #define   oneWirePin    40
 //setings for imputs
 //					input pin, time debounc,pullup,invert						
-Button iTlakFiltra(diTlakFilter, 10000, false, false);
-Button iSiloMax(diSiloMax, 10000, false, false);
-Button iSiloMin(diSiloMin, 10000, false, false);
-Button iBriketMax(diBriketMax, 10000, false, false);
-Button iBriketMin(diBriketMin, 10000, false, false);
-Button iOlejLow(diOlejLow, 10000, false, false);
+Button iTlakFiltra(diTlakFilter, 1000, false, false);
+Button iSiloMax(diSiloMax, 1000, false, false);
+Button iSiloMin(diSiloMin, 1000, false, false);
+Button iBriketMax(diBriketMax, 1000, false, false);
+Button iBriketMin(diBriketMin, 1000, false, false);
+Button iOlejLow(diOlejLow, 1000, false, false);
 Button iBriketOn(diBriketON, 500, false, true);
 Button iPlneVreco(diPlneVreco, 5000, false, true);
 //setup all inputs
@@ -58,6 +58,12 @@ void setupIOpins() {
 	iBriketOn.begin();
 	iPlneVreco.begin();
 	//set output pins
+	digitalWrite(doPrefukON, 1);
+	digitalWrite(doBriketON, 1);
+	digitalWrite(doOdlahSTART, 1);
+	digitalWrite(doChladenie, 1);
+	digitalWrite(doAlarm, 1);
+
 	pinMode(doPrefukON, OUTPUT);
 	pinMode(doBriketON, OUTPUT);
 	pinMode(doOdlahSTART, OUTPUT);
@@ -78,11 +84,11 @@ void read_all_inputs() {
 }
 //all outputs to off state
 void do_all_off() {
-	digitalWrite(doBriketON, 0);
-	digitalWrite(doChladenie, 0);
-	digitalWrite(doOdlahSTART, 0);
-	digitalWrite(doPrefukON, 0);
-	digitalWrite(doAlarm, 0);
+	digitalWrite(doBriketON, 1);
+	digitalWrite(doChladenie, 1);
+	digitalWrite(doOdlahSTART, 1);
+	digitalWrite(doPrefukON, 1);
+	digitalWrite(doAlarm, 1);
 }
 
 #endif

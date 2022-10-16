@@ -24,11 +24,7 @@
 //--------------------------------------
 //Diplay actual time from RTC on LCD
 void printTime(uint8_t row) {
-	myDateTime = rtc.now();
-	lcd.setCursor(0, row);
-	lcd.print(myDateTime.hour());
-	lcd.print(":");
-	lcd.print(myDateTime.minute());
+	
 	if (rtc.isrunning()) { //RTC is OK
 		myDateTime = rtc.now();
 		lcd.setCursor(0, row);
@@ -41,7 +37,8 @@ void printTime(uint8_t row) {
 		printDigits(myDateTime.minute());
 		Serial.println(" ");
 	}
-	else {   //No RTC
+	else 
+	{   //No RTC
 		lcd.setCursor(0, row);
 		lcd.print("Err no RTC");
 		Serial.println(F("ERROR NO RTC found"));
@@ -54,13 +51,17 @@ void printState(T_BrikState _state, T_SiloState _sil_state) {
 	if (lastBrikState != _state) {
 		Serial.println(state_text[int8_t(_state)]);
 		lcd.setCursor(0, 1);
+		lcd.print("                    ");
+		lcd.setCursor(0, 1);
 		lcd.print(state_text[int8_t(_state)]);
 	}
 	lastBrikState = _state;
 	if (lastSilState != _sil_state) {
 		Serial.println(Sil_state_text[int8_t(_sil_state)]);
 		lcd.setCursor(0, 2);
-
+		lcd.print("                    ");
+		lcd.setCursor(0, 2);
+		lcd.print(Sil_state_text[int8_t(_sil_state)]);
 	}
 	lastSilState = _sil_state;
 }
@@ -99,6 +100,7 @@ TimedAction readInputsAction = TimedAction(50, read_all_inputs);
 // the setup function runs once when you press reset or power the board
 void setup() {
 	Serial.begin(115200);
+	Wire.setClock(100000);
 	delay(200);
 	Serial.flush();
 	Serial.println(F("Autor: Marian Murin"));
@@ -111,6 +113,7 @@ void setup() {
 	Serial.println(F("____Start____"));
 	Serial.println(F("Set IO pins"));
 	setupIOpins();
+	delay(2000);
 	if (!rtc.begin()) Serial.println("Couldn't find RTC");
 
 	int dsCount = oilTemp.getNumberOfDevices();
@@ -147,7 +150,7 @@ void setup() {
 		Serial.print(oilTemp.getTempC());
 		Serial.print(" C / ");
 	}
-	_delay_ms(500);
+	_delay_ms(1000);
 	lcd.clear();
 	printTime(0);
 	Serial.println("Init finished OK");
@@ -191,9 +194,10 @@ void loop()
 		myCommands.ReadSerial();
 		printState(Brik_State, Silo_Stae);
 		//Briketovacka state machine
-		//Serial.print("States> ");
-		//Serial.print(Brik_State);
-		//Serial.println(Silo_Stae);
+		Serial.print("BrStates> ");
+		Serial.print(Brik_State);
+		Serial.print("   silo>");
+		Serial.println(Silo_Stae);
 		switch (Brik_State)
 		{
 		case BROFF:  //Briketovacka off
@@ -242,11 +246,11 @@ void loop()
 			{
 				Brik_State = ALL_TEPL_OLEJ;
 			}
-			digitalWrite(doAlarm, 0);
+			digitalWrite(doAlarm, 1);
 			Brik_State = BRONGO;
 			break;
 
-		case BRONGO: //Briketovacka ON and GO
+		case BRONGO: //Briketovacka ON and GO 2
 			checkChladenie();
 			if (iBriketOn.releasedFor(1000)) ON_presed = 1;
 
@@ -279,32 +283,37 @@ void loop()
 				Brik_State = ALL_TEPL_OLEJ;
 				break;
 			}
-			digitalWrite(doBriketON, 1);
-			digitalWrite(doAlarm, 0);
+			if (iPlneVreco.pressedFor(5000))
+			{
+				Brik_State = ALL_VRECO_PLNE;
+				break;
+			}
+			digitalWrite(doBriketON, 0);
+			digitalWrite(doAlarm, 1);
 			break;
 
 		case ALL_TEPL_OLEJ:  //err teplota oleja
 			if (iBriketOn.releasedFor(1000)) ON_presed = 1;
 
-			if (iBriketOn.pressedFor(5000) && ON_presed)
+			if (iBriketOn.pressedFor(2000) && ON_presed)
 			{
 				ON_presed = 0;
 				Brik_State = BROFF;
 				break;
 			}
 			checkChladenie();
-			digitalWrite(doAlarm, 1);
-			digitalWrite(doBriketON, 0);
+			digitalWrite(doAlarm, 0);
+			digitalWrite(doBriketON, 1);
 			if (brik_oil_temp < TEMP_CHLAD_ON) Brik_State = BRONGO;
 
 			break;
 		case ALL_MALO_PILIN:  //err malo piln
 			checkChladenie();
-			digitalWrite(doAlarm, 1);
-			digitalWrite(doBriketON, 0);
+			digitalWrite(doAlarm, 0);
+			digitalWrite(doBriketON, 1);
 			if (iBriketOn.releasedFor(1000)) ON_presed = 1;
 
-			if (iBriketOn.pressedFor(5000) && ON_presed)
+			if (iBriketOn.pressedFor(2000) && ON_presed)
 			{
 				ON_presed = 0;
 				Brik_State = BROFF;
@@ -316,20 +325,20 @@ void loop()
 			break;
 		case ALL_VRECO_PLNE: //err plne vreco
 			checkChladenie();
-			digitalWrite(doAlarm, 1);
-			digitalWrite(doBriketON, 0);
+			digitalWrite(doAlarm, 0);
+			digitalWrite(doBriketON, 1);
 			if (iBriketOn.releasedFor(1000)) ON_presed = 1;
 
-			if (iBriketOn.pressedFor(5000) && ON_presed)
+			if (iBriketOn.pressedFor(2000) && ON_presed)
 			{
 				ON_presed = 0;
 				Brik_State = BROFF;
 				break;
 			}
 
-			if (ON_presed && iBriketOn.pressedFor(100) && ON_presed && iPlneVreco.releasedFor(1000))
+			if (ON_presed && iBriketOn.pressedFor(100)  && iPlneVreco.releasedFor(1000))
 			{
-				digitalWrite(doAlarm, 0);
+				digitalWrite(doAlarm, 1);
 				ON_presed = 0;
 				Brik_State = BRONGO;
 				break;
@@ -339,30 +348,31 @@ void loop()
 		case ALL_FILTER: //err filter oleja
 
 			if (iBriketOn.releasedFor(1000)) ON_presed = 1;
+		
 
-			if (iBriketOn.pressedFor(5000) && ON_presed)
+			if (iBriketOn.pressedFor(2000) && ON_presed)
 			{
 				ON_presed = 0;
 				Brik_State = BROFF;
 				break;
 			}
 
-			digitalWrite(doAlarm, 1);
-			digitalWrite(doBriketON, 0);
+			digitalWrite(doAlarm, 0);
+			digitalWrite(doBriketON, 1);
 			break;
 
 		case ALL_MALOLEJ: //err malo oleja
 			if (iBriketOn.releasedFor(1000)) ON_presed = 1;
 
-			if (iBriketOn.pressedFor(5000) && ON_presed)
+			if (iBriketOn.pressedFor(2000) && ON_presed)
 			{
 				ON_presed = 0;
 				Brik_State = BROFF;
 				break;
 			}
 
-			digitalWrite(doAlarm, 1);
-			digitalWrite(doBriketON, 0);
+			digitalWrite(doAlarm, 0);
+			digitalWrite(doBriketON, 1);
 			break;
 		default:
 			break;
@@ -371,35 +381,35 @@ void loop()
 		switch (Silo_Stae) 
 		{
 		case SI_OFF: //silo OFF
-			digitalWrite(doPrefukON, 0);
+			digitalWrite(doPrefukON, 1);
 			break;
 		case SI_ON: //silo ON
-			digitalWrite(doPrefukON, 0);
+			digitalWrite(doPrefukON, 1);
 			if (iBriketMin.pressedFor(10000) && iSiloMin.releasedFor(10000)) Silo_Stae = PREFUK;
 			if (iBriketMax.pressedFor(2000) && iSiloMax.pressedFor(2000)) Silo_Stae = ALL_SVELA_PILIN;
 			break;
 
 		case PREFUK: //silo prefuk ON
-			digitalWrite(doPrefukON, 1);
+			digitalWrite(doPrefukON, 0);
 			if (iBriketMax.pressedFor(5000) || iSiloMin.pressedFor(5000))Silo_Stae = SI_ON;
 			if (iBriketMin.pressedFor(10000) && iSiloMin.pressedFor(10000)) Silo_Stae = ALL_SMALO_PILIN;
-			if (iBriketMax.pressedFor(2000) && iSiloMax.pressedFor(2000)) Silo_Stae = ALL_SVELA_PILIN;
+			if (iBriketMax.pressedFor(2000) && iSiloMax.releasedFor(5000)) Silo_Stae = ALL_SVELA_PILIN;
 			break;
 
 		case ALL_SMALO_PILIN: //err malo pilin
-			digitalWrite(doPrefukON, 0);
-			digitalWrite(doAlarm, 1);
+			digitalWrite(doPrefukON, 1);
+			digitalWrite(doAlarm, 0);
 			if (iSiloMin.releasedFor(100000)) {
-				digitalWrite(doAlarm, 0);
+				digitalWrite(doAlarm, 1);
 				Silo_Stae = SI_ON;
 			}
 			break;
 
 		case ALL_SVELA_PILIN: //err plne silo
-			digitalWrite(doPrefukON, 0);
-			digitalWrite(doAlarm, 1);
+			digitalWrite(doPrefukON, 1);
+			digitalWrite(doAlarm, 0);
 			if (iBriketMin.pressedFor(10000)) {
-				digitalWrite(doAlarm, 0);
+				digitalWrite(doAlarm, 1);
 				Silo_Stae = PREFUK;
 			}
 			break;
