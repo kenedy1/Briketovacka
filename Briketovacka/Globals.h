@@ -23,9 +23,9 @@ typedef enum {
 T_BrikState;
 //Text for disply
 char state_text[][20] = {
-	"Briket OFF",
-	"Briket ON",
-	"Briket PRACUJE",
+	"Briket:  OFF",
+	"Briket:  ON",
+	"Briket:  PRACUJE",
 	"ERR Bri TEPLOT OLEJ",
 	"ERR Bri MALO PILIN",
 	"ERR Bri VRECO PLNE",
@@ -43,9 +43,9 @@ typedef enum {
 }
 T_SiloState;
 char Sil_state_text[][20] = {
-	"Silo OFF",
-	"Silo ON",
-	"Silo PREFUK",
+	"Silo:    OFF",
+	"Silo:    ON",
+	"Silo:    PREFUK",
 	"ERR Silo MALO PILIN",
 	"ERR Silo VELA PILIN"
 //   12345678901234567890
