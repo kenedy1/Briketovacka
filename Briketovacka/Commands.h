@@ -161,7 +161,7 @@ void cmd_print_info(SerialCommands* sender)
 {
 	printActTime(sender);
 	sender->GetSerial()->print("Work hours >");
-	sender->GetSerial()->println();
+	sender->GetSerial()->println(brik_work_hour);
 
 }
 
@@ -172,7 +172,7 @@ SerialCommand  scmd_set_mount("T", cmd_set_mount, false);
 SerialCommand  scmd_set_day("A", cmd_set_day, false);
 SerialCommand  scmd_set_whour("W", cmd_set_whour, false);
 SerialCommand  scmd_info("I", cmd_print_info, true);
-SerialCommand  scmd_help("h", cmd_help, true);
+SerialCommand  scmd_help("?", cmd_help, true);
 
 #endif // !_Commands_h_
 

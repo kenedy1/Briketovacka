@@ -57,10 +57,14 @@ DateTime myDateTime;
 RTC_DS1307 rtc;
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 
-bool oilTempSenOK = 0;
+bool oilTempSenOK = FALSE;
+bool chladIsOn = FALSE;
+bool odlStartIsOn = FALSE;
 int lastBrikState = 255;
 int lastSilState = 255;
 float brik_oil_temp = 0;
 uint32_t brik_work_hour = 0;
+static T_BrikState Brik_State = BROFF;
+static T_SiloState Silo_Stae = SI_OFF;
 
 #endif // ! _Globals.h

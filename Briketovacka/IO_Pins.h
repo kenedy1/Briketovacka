@@ -30,14 +30,14 @@
 #define   oneWirePin    40
 //setings for imputs
 //					input pin, time debounc,pullup,invert						
-Button iTlakFiltra(diTlakFilter, 1000, false, false);
-Button iSiloMax(diSiloMax, 1000, false, false);
-Button iSiloMin(diSiloMin, 1000, false, false);
-Button iBriketMax(diBriketMax, 1000, false, false);
-Button iBriketMin(diBriketMin, 1000, false, false);
-Button iOlejLow(diOlejLow, 1000, false, false);
-Button iBriketOn(diBriketON, 500, false, true);
-Button iPlneVreco(diPlneVreco, 5000, false, true);
+Button iTlakFiltra(diTlakFilter, 1000, FALSE, FALSE);
+Button iSiloMax(diSiloMax, 1000, FALSE, FALSE);
+Button iSiloMin(diSiloMin, 1000, FALSE, FALSE);
+Button iBriketMax(diBriketMax, 1000, FALSE, FALSE);
+Button iBriketMin(diBriketMin, 1000, FALSE, FALSE);
+Button iOlejLow(diOlejLow, 1000, FALSE, FALSE);
+Button iBriketOn(diBriketON, 200, FALSE, TRUE);
+Button iPlneVreco(diPlneVreco, 5000, FALSE, TRUE);
 //setup all inputs
 void setupIOpins() {
 	//set inputs pins
@@ -85,8 +85,8 @@ void read_all_inputs() {
 //all outputs to off state
 void do_all_off() {
 	digitalWrite(doBriketON, 1);
-	digitalWrite(doChladenie, 1);
-	digitalWrite(doOdlahSTART, 1);
+	//digitalWrite(doChladenie, 1);
+	//digitalWrite(doOdlahSTART, 1);
 	digitalWrite(doPrefukON, 1);
 	digitalWrite(doAlarm, 1);
 }

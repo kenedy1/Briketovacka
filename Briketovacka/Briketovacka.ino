@@ -28,12 +28,14 @@ void printTime(uint8_t row) {
 	if (rtc.isrunning()) { //RTC is OK
 		myDateTime = rtc.now();
 		lcd.setCursor(0, row);
+		lcd.print("Time: ");
 		lcd.print(myDateTime.hour(), DEC);
 		lcd.print(":");
 		lcd.print(myDateTime.minute(), DEC);
-		Serial.print(F("Time >"));
+		
+		Serial.print(F("Time "));
 		printDigits(myDateTime.hour());
-		Serial.print(F(":"));
+		//Serial.print(F(":"));
 		printDigits(myDateTime.minute());
 		Serial.println(" ");
 	}
@@ -74,6 +76,17 @@ void printDigits(int digits) {
 		Serial.print('0');
 	Serial.print(digits);
 }
+
+
+void printTimeAct()
+{
+printTime(0);
+
+Serial.print("BrStates> ");
+Serial.print(Brik_State);
+Serial.print("   silo>");
+Serial.println(Silo_Stae);
+}
 //--------------------------------------
 // Get oil temp from onewire 
 void getOilTemp() {
@@ -81,7 +94,8 @@ void getOilTemp() {
 		oilTemp.doConversion();
 		brik_oil_temp = oilTemp.getTempC();
 		lcd.setCursor(0, 3);
-		lcd.print(brik_oil_temp, DEC);
+		lcd.print("Oil temp: ");
+		lcd.print((int)brik_oil_temp, DEC);
 		Serial.print("Oil Temp>");
 		Serial.println(brik_oil_temp);
 	}
@@ -90,12 +104,13 @@ void getOilTemp() {
 		lcd.print("NO TEMP");
 		Serial.println(F("ERROR No oil temperature sensor found."));
 	}
-	printTime(0);
+	
 }
 //--------------------------------------
 //Timed actions
-TimedAction oilTemtAction = TimedAction(1000, getOilTemp);
-TimedAction readInputsAction = TimedAction(50, read_all_inputs);
+TimedAction oilTemtAction = TimedAction(5000, getOilTemp);
+TimedAction readInputsAction = TimedAction(100, read_all_inputs);
+TimedAction prinTimeAction = TimedAction(5000, printTimeAct);
 //--------------------------------------
 // the setup function runs once when you press reset or power the board
 void setup() {
@@ -158,7 +173,7 @@ void setup() {
 	oilTemtAction.enable();
 	readInputsAction.enable();
 
-	myCommands.SetDefaultHandler(cmd_unrecognized);
+	myCommands.SetDefaultHandler(&cmd_unrecognized);
 	myCommands.AddCommand(&scmd_set_hour);
 	myCommands.AddCommand(&scmd_set_minuts);
 	myCommands.AddCommand(&scmd_set_year);
@@ -169,35 +184,62 @@ void setup() {
 	myCommands.AddCommand(&scmd_help);
 }
 //--------------------------------------
-//Check cooling fan and temp.
+//Check cooling fan and temp for valve.
 void checkChladenie() {
-	if (!digitalRead(doChladenie)) {
-		if (brik_oil_temp > TEMP_CHLAD_ON) digitalWrite(doChladenie, 1);
+	//Control coolin fan
+	if (!chladIsOn) 
+	{
+		if (brik_oil_temp > TEMP_CHLAD_ON) 
+		{
+			digitalWrite(doChladenie, 0);
+			chladIsOn = TRUE;
+		}
 	}
-	else if (brik_oil_temp > TEMP_CHLAD_OFF) digitalWrite(doChladenie, 0);
-	if (brik_oil_temp < TEMP_OIL_LOW) digitalWrite(doOdlahSTART, 1);
-	else digitalWrite(doOdlahSTART, 0);
+	else
+	{
+		if (brik_oil_temp < TEMP_CHLAD_OFF) 
+		{
+			digitalWrite(doChladenie, 1);
+			chladIsOn = FALSE;
+		}	
+	}
+	//Control odlahceny start valve
+	if (!odlStartIsOn) 
+	{
+		if (brik_oil_temp < TEMP_OIL_LOW) 
+		{
+			digitalWrite(doOdlahSTART, 0);
+			odlStartIsOn = TRUE;
+		}
+	}
+	else
+	{
+		if (brik_oil_temp >  (TEMP_OIL_LOW + 5)) 
+		{
+			digitalWrite(doOdlahSTART, 1);
+			odlStartIsOn = FALSE;
+		}	
+	}
+		
+	
 }
 //--------------------------------------
 // the loop function runs over and over again until power down or reset
 void loop()
 {
 	myCommands.ReadSerial();
-	static T_BrikState Brik_State = BROFF;
-	static T_SiloState Silo_Stae = SI_OFF;
+	
 	bool ON_presed = 0;
 	while (1)
 	{
 		myCommands.ReadSerial();
 		readInputsAction.check();
 		oilTemtAction.check();
+		prinTimeAction.check();
 		myCommands.ReadSerial();
 		printState(Brik_State, Silo_Stae);
 		//Briketovacka state machine
-		Serial.print("BrStates> ");
-		Serial.print(Brik_State);
-		Serial.print("   silo>");
-		Serial.println(Silo_Stae);
+		
 		switch (Brik_State)
 		{
 		case BROFF:  //Briketovacka off
@@ -230,7 +272,7 @@ void loop()
 				Brik_State = ALL_MALOLEJ;
 			}
 
-			if (iBriketMin.pressedFor(20000) && iSiloMin.pressedFor(20000)) 
+			if (iBriketMin.pressedFor(30000) && iSiloMin.pressedFor(30000)) 
 			{
 				Brik_State = ALL_MALO_PILIN;
 				break;
@@ -386,14 +428,14 @@ void loop()
 		case SI_ON: //silo ON
 			digitalWrite(doPrefukON, 1);
 			if (iBriketMin.pressedFor(10000) && iSiloMin.releasedFor(10000)) Silo_Stae = PREFUK;
-			if (iBriketMax.pressedFor(2000) && iSiloMax.pressedFor(2000)) Silo_Stae = ALL_SVELA_PILIN;
+			if (iBriketMax.releasedFor(2000) && iSiloMax.releasedFor(2000)) Silo_Stae = ALL_SVELA_PILIN;
 			break;
 
 		case PREFUK: //silo prefuk ON
 			digitalWrite(doPrefukON, 0);
-			if (iBriketMax.pressedFor(5000) || iSiloMin.pressedFor(5000))Silo_Stae = SI_ON;
+			if (iBriketMax.releasedFor(5000) || iSiloMin.pressedFor(5000))Silo_Stae = SI_ON;
 			if (iBriketMin.pressedFor(10000) && iSiloMin.pressedFor(10000)) Silo_Stae = ALL_SMALO_PILIN;
-			if (iBriketMax.pressedFor(2000) && iSiloMax.releasedFor(5000)) Silo_Stae = ALL_SVELA_PILIN;
+			if (iBriketMax.releasedFor(5000) && iSiloMax.releasedFor(5000)) Silo_Stae = ALL_SVELA_PILIN;
 			break;
 
 		case ALL_SMALO_PILIN: //err malo pilin
