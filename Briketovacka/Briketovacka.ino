@@ -101,7 +101,7 @@ void getOilTemp() {
 	}
 	else {
 		lcd.setCursor(0, 3);
-		lcd.print("NO TEMP");
+		lcd.print("NO TEMP Sensor");
 		Serial.println(F("ERROR No oil temperature sensor found."));
 	}
 	
@@ -152,10 +152,9 @@ void setup() {
 		oilTempSenOK = 1;
 		oilTemp.doConversion();
 		Serial.println("Oil temp sen found");
-		lcd.print("Oil temp sen OK");
+		lcd.print("Temp sen OK");
 		lcd.setCursor(0, 2);
 		for (uint8_t i = 0; i < 8; i++) {
-			lcd.print(" ");
 			lcd.print(dsaddr[i]);
 			Serial.print(" ");
 			Serial.print(dsaddr[i]);
