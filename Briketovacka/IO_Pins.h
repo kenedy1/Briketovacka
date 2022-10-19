@@ -7,7 +7,7 @@
 //temperature for allarms an cooling
 #define   TEMP_CHLAD_ON      48
 #define   TEMP_CHLAD_OFF     40
-#define   TEMP_OIL_LOW       10
+#define   TEMP_OIL_LOW       15
 #define   TEMP_OIL_BRIK_MAX  60
 // digitalne vstupy
 #define   diTlakFilter	22
@@ -37,7 +37,7 @@ Button iBriketMax(diBriketMax, 1000, FALSE, FALSE);
 Button iBriketMin(diBriketMin, 1000, FALSE, FALSE);
 Button iOlejLow(diOlejLow, 1000, FALSE, FALSE);
 Button iBriketOn(diBriketON, 200, FALSE, TRUE);
-Button iPlneVreco(diPlneVreco, 5000, FALSE, TRUE);
+Button iPlneVreco(diPlneVreco, 1000, FALSE, TRUE);
 //setup all inputs
 void setupIOpins() {
 	//set inputs pins
@@ -87,7 +87,7 @@ void do_all_off() {
 	digitalWrite(doBriketON, 1);
 	//digitalWrite(doChladenie, 1);
 	//digitalWrite(doOdlahSTART, 1);
-	digitalWrite(doPrefukON, 1);
+	//digitalWrite(doPrefukON, 1);
 	digitalWrite(doAlarm, 1);
 }
 

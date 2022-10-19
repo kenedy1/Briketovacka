@@ -24,7 +24,22 @@
 //--------------------------------------
 //Diplay actual time from RTC on LCD
 void printTime(uint8_t row) {
-	
+	byte BM = 0;
+	byte BX = 0;
+	byte SM = 0;
+	byte SX = 0;
+	byte _inpState = 0;
+
+	BM = iBriketMin.isReleased();
+	BX = iBriketMax.isReleased();
+	SM = iSiloMin.isReleased();
+	SX = iSiloMax.isReleased();
+	_inpState = SX | (SM << 1) | (BX << 2) | (BM << 3);
+	lcd.setCursor(12, 4);
+	if (_inpState < 16) lcd.print(InpText[_inpState]);
+
+
+
 	if (rtc.isrunning()) { //RTC is OK
 		myDateTime = rtc.now();
 		lcd.setCursor(0, row);
@@ -94,7 +109,9 @@ void getOilTemp() {
 		oilTemp.doConversion();
 		brik_oil_temp = oilTemp.getTempC();
 		lcd.setCursor(0, 3);
-		lcd.print("Oil temp: ");
+		lcd.print("            ")
+		lcd.setCursor(0, 3);
+		lcd.print("Oil temp:");
 		lcd.print((int)brik_oil_temp, DEC);
 		Serial.print("Oil Temp>");
 		Serial.println(brik_oil_temp);
@@ -213,7 +230,7 @@ void checkChladenie() {
 	}
 	else
 	{
-		if (brik_oil_temp >  (TEMP_OIL_LOW + 5)) 
+		if (brik_oil_temp >  (TEMP_OIL_LOW + 3)) 
 		{
 			digitalWrite(doOdlahSTART, 1);
 			odlStartIsOn = FALSE;
@@ -271,7 +288,10 @@ void loop()
 				Brik_State = ALL_MALOLEJ;
 			}
 
-			if (iBriketMin.pressedFor(30000) && iSiloMin.pressedFor(30000)) 
+			if (iBriketMax.releasedFor(3000) && iBriketMin.pressedFor(3000))
+				Brik_State = ALL_BSENSOR;
+
+			if (iBriketMin.pressedFor(5000) && iSiloMin.pressedFor(5000)) 
 			{
 				Brik_State = ALL_MALO_PILIN;
 				break;
@@ -301,13 +321,15 @@ void loop()
 				Brik_State = BROFF;
 				break;
 			}
+			if (iBriketMax.releasedFor(3000) && iBriketMin.pressedFor(3000))
+				Brik_State = ALL_BSENSOR;
 
 			if (iOlejLow.pressedFor(10000))
 			{
 				Brik_State = ALL_MALOLEJ;
 			}
 
-			if (iBriketMin.pressedFor(20000) && iSiloMin.pressedFor(20000))
+			if (iBriketMin.pressedFor(5000) && iSiloMin.pressedFor(5000))
 			{
 				Brik_State = ALL_MALO_PILIN;
 				break;
@@ -415,6 +437,20 @@ void loop()
 			digitalWrite(doAlarm, 0);
 			digitalWrite(doBriketON, 1);
 			break;
+		case ALL_BSENSOR:
+			if (iBriketOn.releasedFor(1000)) ON_presed = 1;
+
+			if (iBriketOn.pressedFor(2000) && ON_presed)
+			{
+				ON_presed = 0;
+				Brik_State = BROFF;
+				break;
+			}
+
+			digitalWrite(doAlarm, 0);
+			digitalWrite(doBriketON, 1);
+			break;
+			break;
 		default:
 			break;
 		}
@@ -425,34 +461,45 @@ void loop()
 			digitalWrite(doPrefukON, 1);
 			break;
 		case SI_ON: //silo ON
-			digitalWrite(doPrefukON, 1);
+			if (iSiloMax.releasedFor(3000) && iSiloMin.pressedFor(3000)) Silo_Stae = ALL_SSENSOR;
+
 			if (iBriketMin.pressedFor(10000) && iSiloMin.releasedFor(10000)) Silo_Stae = PREFUK;
-			if (iBriketMax.releasedFor(2000) && iSiloMax.releasedFor(2000)) Silo_Stae = ALL_SVELA_PILIN;
+			if (iBriketMax.releasedFor(10000) && iSiloMax.releasedFor(10000)) Silo_Stae = ALL_SVELA_PILIN;
+			digitalWrite(doPrefukON, 1); 
 			break;
 
 		case PREFUK: //silo prefuk ON
-			digitalWrite(doPrefukON, 0);
-			if (iBriketMax.releasedFor(5000) || iSiloMin.pressedFor(5000))Silo_Stae = SI_ON;
+			if (iSiloMax.releasedFor(3000) && iSiloMin.pressedFor(3000)) Silo_Stae = ALL_SSENSOR;
+			if (iBriketMax.releasedFor(10000) || iSiloMin.pressedFor(10000)) Silo_Stae = SI_ON;
 			if (iBriketMin.pressedFor(10000) && iSiloMin.pressedFor(10000)) Silo_Stae = ALL_SMALO_PILIN;
-			if (iBriketMax.releasedFor(5000) && iSiloMax.releasedFor(5000)) Silo_Stae = ALL_SVELA_PILIN;
+			if (iBriketMax.releasedFor(10000) && iSiloMax.releasedFor(10000)) Silo_Stae = ALL_SVELA_PILIN;
+			digitalWrite(doPrefukON, 0);
 			break;
 
 		case ALL_SMALO_PILIN: //err malo pilin
-			digitalWrite(doPrefukON, 1);
-			digitalWrite(doAlarm, 0);
+			
 			if (iSiloMin.releasedFor(100000)) {
 				digitalWrite(doAlarm, 1);
 				Silo_Stae = SI_ON;
 			}
+			digitalWrite(doPrefukON, 1);
+			digitalWrite(doAlarm, 0);
 			break;
 
 		case ALL_SVELA_PILIN: //err plne silo
-			digitalWrite(doPrefukON, 1);
-			digitalWrite(doAlarm, 0);
+			
 			if (iBriketMin.pressedFor(10000)) {
 				digitalWrite(doAlarm, 1);
 				Silo_Stae = PREFUK;
 			}
+			digitalWrite(doPrefukON, 1);
+			digitalWrite(doAlarm, 0);
+			break;
+
+		case ALL_SSENSOR:
+			digitalWrite(doPrefukON, 1);
+			digitalWrite(doAlarm, 0);
+			
 			break;
 
 		default:

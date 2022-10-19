@@ -18,7 +18,8 @@ typedef enum {
 	ALL_MALO_PILIN,
 	ALL_VRECO_PLNE,
 	ALL_FILTER,
-	ALL_MALOLEJ
+	ALL_MALOLEJ,
+	ALL_BSENSOR
 }
 T_BrikState;
 //Text for disply
@@ -30,7 +31,8 @@ char state_text[][20] = {
 	"ERR Bri MALO PILIN",
 	"ERR Bri VRECO PLNE",
 	"ERR Bri FILTER OLEJ",
-	"ERR Bri MALO OLEJA"
+	"ERR Bri MALO OLEJA",
+	"ERR Bri SENSOR PORU"
 //   12345678901234567890
 };
 
@@ -39,7 +41,8 @@ typedef enum {
 	SI_ON,
 	PREFUK,
 	ALL_SMALO_PILIN,
-	ALL_SVELA_PILIN
+	ALL_SVELA_PILIN,
+	ALL_SSENSOR
 }
 T_SiloState;
 char Sil_state_text[][20] = {
@@ -47,9 +50,30 @@ char Sil_state_text[][20] = {
 	"Silo:    ON",
 	"Silo:    PREFUK",
 	"ERR Silo MALO PILIN",
-	"ERR Silo VELA PILIN"
+	"ERR Silo VELA PILIN",
+	"ERR Silo SENSOR"
 //   12345678901234567890
 };
+char InpText[][7] = {
+	"B__S_X",
+	"B__S__",
+	"B__SMX",
+	"B__SM_",
+	"B_XS_X",
+	"B_XS__",
+	"B_XSMX",
+	"B_XSM_",
+	"BM_S_X",
+	"BM_S__",
+	"BM_SMX",
+	"BM_SM_",
+	"BMXS_X",
+	"BMXS__",
+	"BMXSMX",
+	"BMXSM_"
+};
+
+
 
 DS18B20 oilTemp(oneWirePin);
 DateTime myDateTime;
