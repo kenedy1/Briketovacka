@@ -109,7 +109,7 @@ void getOilTemp() {
 		oilTemp.doConversion();
 		brik_oil_temp = oilTemp.getTempC();
 		lcd.setCursor(0, 3);
-		lcd.print("            ")
+		lcd.print("            ");
 		lcd.setCursor(0, 3);
 		lcd.print("Oil temp:");
 		lcd.print((int)brik_oil_temp, DEC);
