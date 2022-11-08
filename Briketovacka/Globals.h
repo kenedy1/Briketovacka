@@ -55,22 +55,22 @@ char Sil_state_text[][20] = {
 //   12345678901234567890
 };
 char InpText[][7] = {
-	"B__S_X",
 	"B__S__",
-	"B__SMX",
+	"B__S_X",
 	"B__SM_",
-	"B_XS_X",
+	"B__SMX",
 	"B_XS__",
-	"B_XSMX",
+	"B_XS_X",
 	"B_XSM_",
-	"BM_S_X",
+	"B_XSMX",
 	"BM_S__",
-	"BM_SMX",
+	"BM_S_X",
 	"BM_SM_",
-	"BMXS_X",
+	"BM_SMX",
 	"BMXS__",
-	"BMXSMX",
-	"BMXSM_"
+	"BMXS_X",
+	"BMXSM_",
+	"BMXSMX"
 };
 
 
@@ -80,7 +80,8 @@ DateTime myDateTime;
 
 RTC_DS1307 rtc;
 LiquidCrystal_I2C lcd(0x27, 20, 4);
-
+int LastAlarmOut;
+long LastBlinkTime = 0;
 bool oilTempSenOK = FALSE;
 bool chladIsOn = FALSE;
 bool odlStartIsOn = FALSE;

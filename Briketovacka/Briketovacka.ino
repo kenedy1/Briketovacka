@@ -35,7 +35,7 @@ void printTime(uint8_t row) {
 	SM = iSiloMin.isReleased();
 	SX = iSiloMax.isReleased();
 	_inpState = SX | (SM << 1) | (BX << 2) | (BM << 3);
-	lcd.setCursor(12, 4);
+	lcd.setCursor(12, 3);
 	if (_inpState < 16) lcd.print(InpText[_inpState]);
 
 
@@ -169,10 +169,11 @@ void setup() {
 		oilTempSenOK = 1;
 		oilTemp.doConversion();
 		Serial.println("Oil temp sen found");
+		lcd.setCursor(0, 1);
 		lcd.print("Temp sen OK");
 		lcd.setCursor(0, 2);
 		for (uint8_t i = 0; i < 8; i++) {
-			lcd.print(dsaddr[i]);
+			lcd.print(dsaddr[i],HEX);
 			Serial.print(" ");
 			Serial.print(dsaddr[i]);
 		}
@@ -491,9 +492,26 @@ void loop()
 			if (iBriketMin.pressedFor(10000)) {
 				digitalWrite(doAlarm, 1);
 				Silo_Stae = PREFUK;
+				break;
+			}
+			long NowTime = millis();
+
+			if (NowTime + 1000 > LastBlinkTime) {
+				
+				if (LastAlarmOut == 0 )
+				{
+					digitalWrite(doAlarm, 0);
+					LastAlarmOut = 1;
+				}
+				else
+				{
+					digitalWrite(doAlarm, 1);
+					LastAlarmOut = 0;
+				}
+				LastBlinkTime = NowTime;
 			}
 			digitalWrite(doPrefukON, 1);
-			digitalWrite(doAlarm, 0);
+			
 			break;
 
 		case ALL_SSENSOR:
