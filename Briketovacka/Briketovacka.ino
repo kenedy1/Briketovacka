@@ -322,10 +322,10 @@ void loop()
 				Brik_State = BROFF;
 				break;
 			}
-			if (iBriketMax.releasedFor(3000) && iBriketMin.pressedFor(3000))
+			if (iBriketMax.releasedFor(5000) && iBriketMin.pressedFor(5000))
 				Brik_State = ALL_BSENSOR;
 
-			if (iOlejLow.pressedFor(10000))
+			if (iOlejLow.pressedFor(3000))
 			{
 				Brik_State = ALL_MALOLEJ;
 			}
@@ -460,9 +460,10 @@ void loop()
 		{
 		case SI_OFF: //silo OFF
 			digitalWrite(doPrefukON, 1);
+			if (iSiloMax.releasedFor(10000)) Silo_Stae = ALL_SVELA_PILIN;
 			break;
 		case SI_ON: //silo ON
-			if (iSiloMax.releasedFor(3000) && iSiloMin.pressedFor(3000)) Silo_Stae = ALL_SSENSOR;
+			if (iSiloMax.releasedFor(30000) && iSiloMin.pressedFor(30000)) Silo_Stae = ALL_SSENSOR;
 
 			if (iBriketMin.pressedFor(10000) && iSiloMin.releasedFor(10000)) Silo_Stae = PREFUK;
 			if (iBriketMax.releasedFor(10000) && iSiloMax.releasedFor(10000)) Silo_Stae = ALL_SVELA_PILIN;
@@ -470,7 +471,7 @@ void loop()
 			break;
 
 		case PREFUK: //silo prefuk ON
-			if (iSiloMax.releasedFor(3000) && iSiloMin.pressedFor(3000)) Silo_Stae = ALL_SSENSOR;
+			if (iSiloMax.releasedFor(30000) && iSiloMin.pressedFor(30000)) Silo_Stae = ALL_SSENSOR;
 			if (iBriketMax.releasedFor(10000) || iSiloMin.pressedFor(10000)) Silo_Stae = SI_ON;
 			if (iBriketMin.pressedFor(10000) && iSiloMin.pressedFor(10000)) Silo_Stae = ALL_SMALO_PILIN;
 			if (iBriketMax.releasedFor(10000) && iSiloMax.releasedFor(10000)) Silo_Stae = ALL_SVELA_PILIN;
@@ -479,7 +480,7 @@ void loop()
 
 		case ALL_SMALO_PILIN: //err malo pilin
 			
-			if (iSiloMin.releasedFor(100000)) {
+			if (iSiloMin.releasedFor(1500000)) {
 				digitalWrite(doAlarm, 1);
 				Silo_Stae = SI_ON;
 			}

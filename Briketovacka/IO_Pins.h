@@ -7,7 +7,7 @@
 //temperature for allarms an cooling
 #define   TEMP_CHLAD_ON      48
 #define   TEMP_CHLAD_OFF     40
-#define   TEMP_OIL_LOW       15
+#define   TEMP_OIL_LOW       10
 #define   TEMP_OIL_BRIK_MAX  60
 // digitalne vstupy
 #define   diTlakFilter	22
